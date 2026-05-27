@@ -7,21 +7,8 @@ def main():
         print("❌ burmese.srt not found. Run translate.py first.")
         return
 
-    font_candidates = [
-        "/usr/share/fonts/truetype/pyidaungsu/Pyidaungsu.ttf",
-        "Pyidaungsu",  # fallback to system name
-        "Noto Sans Myanmar"
-    ]
-    font_name = None
-    for candidate in font_candidates:
-        if candidate.endswith(".ttf") and os.path.exists(candidate):
-            font_name = candidate
-            break
-        elif not candidate.endswith(".ttf"):
-            font_name = candidate
-            break
-
-    style = f"FontName={font_name},FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H80000000&,BorderStyle=3"
+    # Use the system-installed Noto Sans Myanmar
+    style = "FontName='Noto Sans Myanmar',FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H80000000&,BorderStyle=3"
 
     cmd = [
         "ffmpeg", "-i", "input/video.mp4",
