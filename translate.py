@@ -2,6 +2,7 @@ import os
 import re
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+# စာသားမှန်ကန်စေရန်အတွက် 1.5B မော်ဒယ်ကြီးကို ပြန်လည်အသုံးပြုသည်
 MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
 
 def main():
@@ -9,16 +10,9 @@ def main():
     out_path = "output/burmese.srt"
 
     if not os.path.exists(srt_path):
-        print("❌ chinese.srt not found.")
         return
 
-    if os.path.getsize(srt_path) == 0:
-        print("⚠️ chinese.srt is empty.")
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write("")
-        return
-
-    print("🔄 Loading Qwen2.5 upgraded translation model...")
+    print("🔄 Loading High-Quality Qwen2.5 Translation Model...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype="auto", device_map="cpu")
 
@@ -39,6 +33,8 @@ def main():
             ]
             text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             inputs = tokenizer([text], return_tensors="pt")
+            
+            # တွေးတောမှု ပိုမိုကျယ်ပြန့်စေရန် max_new_tokens=100 သို့ ပြန်ထားသည်
             outputs = model.generate(inputs.input_ids, max_new_tokens=100, temperature=0.1)
             
             generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in zip(inputs.input_ids, outputs)]
@@ -50,7 +46,7 @@ def main():
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(new_lines))
 
-    print("✅ Translation done -> output/burmese.srt")
+    print("✅ High-Quality Translation done -> output/burmese.srt")
 
 if __name__ == "__main__":
     main()
