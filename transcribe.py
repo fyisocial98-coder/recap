@@ -15,21 +15,20 @@ def main():
     video_path = "input/video.mp4"
     audio_path = "input/audio.mp3"
     
-    # Check if video has audio
+    # Check if video has any audio stream
     result = subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type", 
+        ["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type",
          "-of", "default=noprint_wrappers=1:nokey=1", video_path],
         capture_output=True, text=True
     )
     
     if not result.stdout.strip():
-        print("⚠️ No audio stream found in video. Skipping transcription.")
-        # Create empty SRT
+        print("⚠️ No audio stream found. Creating empty subtitle file.")
         with open("output/chinese.srt", "w", encoding="utf-8") as f:
             f.write("")
         return
     
-    # Extract audio (use ? to ignore missing stream)
+    # Extract audio using "0:a?" -> ignore if missing
     cmd = [
         "ffmpeg", "-i", video_path,
         "-q:a", "0", "-map", "0:a?",
@@ -37,9 +36,8 @@ def main():
     ]
     subprocess.run(cmd, check=True)
     
-    # Load Whisper model (CPU)
+    # Load Whisper (CPU, base model)
     model = WhisperModel("base", device="cpu", compute_type="int8")
-    
     segments, _ = model.transcribe(audio_path, language="zh")
     
     with open("output/chinese.srt", "w", encoding="utf-8") as f:
