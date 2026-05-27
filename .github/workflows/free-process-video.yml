@@ -14,9 +14,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Cache models
         uses: actions/cache@v3
         with:
@@ -24,31 +27,39 @@ jobs:
             ~/.cache/huggingface
             ~/.cache/faster_whisper
           key: model-cache-v1
-      - name: Install system deps
+
+      - name: Install system deps & Myanmar font
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-noto-cjk
-          # Install Pyidaungsu font
-          wget -O /tmp/Pyidaungsu.ttf https://github.com/thurasat/webfont/raw/main/Pyidaungsu.ttf
-          sudo mkdir -p /usr/share/fonts/truetype/pyidaungsu
-          sudo mv /tmp/Pyidaungsu.ttf /usr/share/fonts/truetype/pyidaungsu/
+          sudo apt-get install -y ffmpeg fonts-noto-cjk fonts-noto-myanmar
           sudo fc-cache -fv
+
       - name: Install Python deps
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Download video
         run: |
           mkdir -p input output
-          yt-dlp --no-check-certificate -f "best[ext=mp4]" -o "input/video.mp4" "${{ inputs.video_url }}"
+          yt-dlp --no-check-certificate \
+            --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            -f "best[ext=mp4]" \
+            -o "input/video.mp4" \
+            "${{ inputs.video_url }}"
+
       - name: Transcribe (Chinese)
         run: python transcribe.py
+
       - name: Translate (Chinese → Burmese)
         run: python translate.py
-      - name: Burn subtitles
+
+      - name: Burn subtitles with Noto Sans Myanmar
         run: python burn.py
-      - name: Resize to TikTok
+
+      - name: Resize to TikTok (9:16)
         run: python resize.py
+
       - name: Upload final video
         uses: actions/upload-artifact@v4
         with:
