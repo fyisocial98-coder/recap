@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'Chinese video URL (YouTube, TikTok, etc.)'
+        description: 'Chinese video URL'
         required: true
 
 jobs:
@@ -60,6 +60,7 @@ jobs:
       - name: Resize to TikTok
         run: python resize.py
 
+      # ⭐ ဒီနေရာမှာ ထည့်ရမယ်
       - name: Upload final video
         uses: actions/upload-artifact@v4
         with:
