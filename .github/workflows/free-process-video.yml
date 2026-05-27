@@ -36,7 +36,11 @@ jobs:
       - name: Download video
         run: |
           mkdir -p input output
-          yt-dlp -f "best[ext=mp4]" -o "input/video.mp4" "${{ inputs.video_url }}"
+          yt-dlp --no-check-certificate \
+                 --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+                 -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" \
+                 -o "input/video.mp4" \
+                 "${{ inputs.video_url }}"
       - name: Transcribe (Chinese)
         run: python transcribe.py
       - name: Translate (Chinese → Burmese)
