@@ -5,7 +5,7 @@ import shutil
 def main():
     input_video = "output/with_subs.mp4"
     output_video = "output/tiktok_final.mp4"
-
+    
     if not os.path.exists(input_video):
         print("⚠️ with_subs.mp4 not found, using original video")
         shutil.copy("input/video.mp4", output_video)
@@ -18,7 +18,7 @@ def main():
             output_video, "-y"
         ]
         subprocess.run(cmd, check=True)
-
+    
     print("✅ TikTok ready ->", output_video)
 
 if __name__ == "__main__":
