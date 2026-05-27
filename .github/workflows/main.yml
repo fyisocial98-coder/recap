@@ -26,12 +26,15 @@ jobs:
           path: |
             ~/.cache/huggingface
             ~/.cache/faster_whisper
-          key: model-cache-v1
+          key: model-cache-v2
 
-      - name: Install system deps & Myanmar font
+      - name: Install system deps & Pyidaungsu Font
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-noto-cjk fonts-noto-myanmar
+          sudo apt-get install -y ffmpeg wget fontconfig
+          # Linux စနစ်ထဲသို့ ပြည်ထောင်စုဖောင့် ထည့်သွင်းခြင်း
+          sudo mkdir -p /usr/share/fonts/truetype/pyidaungsu
+          sudo wget -O /usr/share/fonts/truetype/pyidaungsu/Pyidaungsu.ttf "https://github.com/NearHFull/Pyidaungsu-Font/raw/master/Pyidaungsu-2.5_Regular.ttf"
           sudo fc-cache -fv
 
       - name: Install Python deps
@@ -54,10 +57,10 @@ jobs:
       - name: Translate (Chinese → Burmese)
         run: python translate.py
 
-      - name: Burn subtitles with Noto Sans Myanmar
+      - name: Burn subtitles
         run: python burn.py
 
-      - name: Resize to TikTok (9:16)
+      - name: Resize to TikTok
         run: python resize.py
 
       - name: Upload final video
