@@ -1,5 +1,6 @@
 import os
 import re
+import unicodedata
 from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
 
 MODEL_NAME = "facebook/m2m100_418M"
@@ -37,7 +38,6 @@ def main():
             encoded = tokenizer(line, return_tensors="pt")
             generated_tokens = model.generate(**encoded, forced_bos_token_id=tokenizer.get_lang_id("my"))
             translation = tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
-            # Normalize Unicode (NFC) to prevent broken characters
             translation = unicodedata.normalize('NFC', translation)
             new_lines.append(translation)
 
