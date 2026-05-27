@@ -7,13 +7,19 @@ def main():
         print("❌ burmese.srt not found. Run translate.py first.")
         return
 
-    # Path to Pyidaungsu font (download it in workflow)
-    font_path = "/usr/share/fonts/truetype/pyidaungsu/Pyidaungsu.ttf"
-    if not os.path.exists(font_path):
-        print("⚠️ Pyidaungsu font not found, falling back to Noto Sans Myanmar")
-        font_name = "Noto Sans Myanmar"
-    else:
-        font_name = font_path  # ffmpeg accepts full path
+    font_candidates = [
+        "/usr/share/fonts/truetype/pyidaungsu/Pyidaungsu.ttf",
+        "Pyidaungsu",  # fallback to system name
+        "Noto Sans Myanmar"
+    ]
+    font_name = None
+    for candidate in font_candidates:
+        if candidate.endswith(".ttf") and os.path.exists(candidate):
+            font_name = candidate
+            break
+        elif not candidate.endswith(".ttf"):
+            font_name = candidate
+            break
 
     style = f"FontName={font_name},FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H80000000&,BorderStyle=3"
 
