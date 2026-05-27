@@ -47,6 +47,7 @@ jobs:
           mkdir -p input output
           yt-dlp --no-check-certificate \
             --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            --cookies cookies.txt \
             -f "best[ext=mp4]" \
             -o "input/video.mp4" \
             "${{ inputs.video_url }}"
@@ -68,3 +69,6 @@ jobs:
         with:
           name: tiktok_video
           path: output/tiktok_final.mp4
+
+
+          
