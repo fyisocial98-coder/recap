@@ -14,24 +14,13 @@ def main():
     video_path = "input/video.mp4"
     audio_path = "input/audio.mp3"
     
-    result = subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type",
-         "-of", "default=noprint_wrappers=1:nokey=1", video_path],
-        capture_output=True, text=True
-    )
-    
-    if not result.stdout.strip():
-        print("⚠️ No audio stream found. Creating empty subtitle file.")
-        with open("output/chinese.srt", "w", encoding="utf-8") as f:
-            f.write("")
-        return
-    
     subprocess.run([
         "ffmpeg", "-i", video_path, "-q:a", "0", "-map", "0:a?", audio_path, "-y"
     ], check=True)
     
+    # beam_size=5 သို့ ပြန်တိုးမြှင့်လိုက်သဖြင့် တရုတ်စကားလုံးများကို အမှန်ကန်ဆုံး နားထောင်ပေးမည် ဖြစ်သည်
     model = WhisperModel("base", device="cpu", compute_type="int8")
-    segments, _ = model.transcribe(audio_path, language="zh")
+    segments, _ = model.transcribe(audio_path, language="zh", beam_size=5)
     
     with open("output/chinese.srt", "w", encoding="utf-8") as f:
         for i, seg in enumerate(segments):
@@ -39,7 +28,7 @@ def main():
             f.write(f"{format_time(seg.start)} --> {format_time(seg.end)}\n")
             f.write(f"{seg.text.strip()}\n\n")
     
-    print("✅ Transcription done -> output/chinese.srt")
+    print("✅ High-Quality Transcription done -> output/chinese.srt")
 
 if __name__ == "__main__":
     main()
