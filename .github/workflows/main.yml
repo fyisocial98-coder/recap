@@ -28,13 +28,13 @@ jobs:
             ~/.cache/faster_whisper
           key: model-cache-v2
 
-      - name: Install system deps & Pyidaungsu Font
+      - name: Install system deps & Local Pyidaungsu Font
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg wget fontconfig
-          # Linux စနစ်ထဲသို့ ပြည်ထောင်စုဖောင့် ထည့်သွင်းခြင်း
+          sudo apt-get install -y ffmpeg fontconfig
+          # Repo ထဲမှာ သင်တင်ထားမည့် Pyidaungsu.ttf ကို Linux System ထဲသို့ ကူးထည့်ခြင်း
           sudo mkdir -p /usr/share/fonts/truetype/pyidaungsu
-          sudo wget -O /usr/share/fonts/truetype/pyidaungsu/Pyidaungsu.ttf "https://github.com/NearHFull/Pyidaungsu-Font/raw/master/Pyidaungsu-2.5_Regular.ttf"
+          sudo cp Pyidaungsu.ttf /usr/share/fonts/truetype/pyidaungsu/
           sudo fc-cache -fv
 
       - name: Install Python deps
