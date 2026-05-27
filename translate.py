@@ -1,8 +1,8 @@
 import os
 import re
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
 
-MODEL_NAME = "Qwen/Qwen2-1.5B-Instruct"
+MODEL_NAME = "facebook/m2m100_418M"
 
 def main():
     srt_path = "output/chinese.srt"
@@ -12,16 +12,15 @@ def main():
         print("❌ chinese.srt not found. Run transcribe.py first.")
         return
 
-    # If empty file (no audio)
     if os.path.getsize(srt_path) == 0:
         print("⚠️ chinese.srt is empty. Creating empty burmese.srt")
         with open(out_path, "w", encoding="utf-8") as f:
             f.write("")
         return
 
-    print("🔄 Loading translation model (~3GB download on first run)...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype="auto", device_map="cpu")
+    print("🔄 Loading m2m100 model (~1.5GB)...")
+    tokenizer = M2M100Tokenizer.from_pretrained(MODEL_NAME, src_lang="zh", tgt_lang="my")
+    model = M2M100ForConditionalGeneration.from_pretrained(MODEL_NAME, device_map="cpu")
 
     with open(srt_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -34,11 +33,12 @@ def main():
         elif line == "":
             new_lines.append("")
         else:
-            prompt = f"Translate Chinese to Burmese. Only output Burmese text.\nChinese: {line}\nBurmese:"
-            inputs = tokenizer(prompt, return_tensors="pt")
-            outputs = model.generate(inputs.input_ids, max_new_tokens=100, temperature=0.3)
-            full = tokenizer.decode(outputs[0], skip_special_tokens=True)
-            translation = full.split("Burmese:")[-1].strip() if "Burmese:" in full else line
+            tokenizer.src_lang = "zh"
+            encoded = tokenizer(line, return_tensors="pt")
+            generated_tokens = model.generate(**encoded, forced_bos_token_id=tokenizer.get_lang_id("my"))
+            translation = tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
+            # Normalize Unicode (NFC) to prevent broken characters
+            translation = unicodedata.normalize('NFC', translation)
             new_lines.append(translation)
 
     with open(out_path, "w", encoding="utf-8") as f:
