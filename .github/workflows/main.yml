@@ -49,10 +49,12 @@ jobs:
             COOKIE_ARG="--cookies cookies.txt"
             echo "🍪 cookies.txt found! Using authenticated download."
           fi
+          # ရုပ်ရောအသံပါ အကုန်လုံး ပေါင်းစပ်ပြီး ကျလာအောင် အသေအချာ ပြောင်းလဲထားသည်
           yt-dlp --no-check-certificate \
             --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
             $COOKIE_ARG \
-            -f "best[ext=mp4]" \
+            -f "bestvideo+bestaudio/best" \
+            --merge-output-format mp4 \
             -o "input/video.mp4" \
             "${{ inputs.video_url }}"
 
