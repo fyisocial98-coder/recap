@@ -1,20 +1,27 @@
 import os
 import re
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import unicodedata
+from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
 
-# စာသားမှန်ကန်စေရန်အတွက် 1.5B မော်ဒယ်ကြီးကို ပြန်လည်အသုံးပြုသည်
-MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
+MODEL_NAME = "facebook/m2m100_418M"
 
 def main():
     srt_path = "output/chinese.srt"
     out_path = "output/burmese.srt"
 
     if not os.path.exists(srt_path):
+        print("❌ chinese.srt not found. Run transcribe.py first.")
         return
 
-    print("🔄 Loading High-Quality Qwen2.5 Translation Model...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype="auto", device_map="cpu")
+    if os.path.getsize(srt_path) == 0:
+        print("⚠️ chinese.srt is empty. Creating empty burmese.srt")
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write("")
+        return
+
+    print("🔄 Loading m2m100 model (~1.5GB)...")
+    tokenizer = M2M100Tokenizer.from_pretrained(MODEL_NAME, src_lang="zh", tgt_lang="my")
+    model = M2M100ForConditionalGeneration.from_pretrained(MODEL_NAME, device_map="cpu")
 
     with open(srt_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -27,26 +34,17 @@ def main():
         elif line == "":
             new_lines.append("")
         else:
-            messages = [
-                {"role": "system", "content": "You are a professional Chinese to Burmese translator. Translate the given text into natural and fluent Burmese subtitle. Output ONLY the Burmese translation, no English, no explanations."},
-                {"role": "user", "content": line}
-            ]
-            text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-            inputs = tokenizer([text], return_tensors="pt")
-            
-            # တွေးတောမှု ပိုမိုကျယ်ပြန့်စေရန် max_new_tokens=100 သို့ ပြန်ထားသည်
-            outputs = model.generate(inputs.input_ids, max_new_tokens=100, temperature=0.1)
-            
-            generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in zip(inputs.input_ids, outputs)]
-            translation = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
-            
+            tokenizer.src_lang = "zh"
+            encoded = tokenizer(line, return_tensors="pt")
+            generated_tokens = model.generate(**encoded, forced_bos_token_id=tokenizer.get_lang_id("my"))
+            translation = tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
+            translation = unicodedata.normalize('NFC', translation)
             new_lines.append(translation)
-            print(f"Chinese: {line} ➡️ Burmese: {translation}")
 
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(new_lines))
 
-    print("✅ High-Quality Translation done -> output/burmese.srt")
+    print("✅ Translation done -> output/burmese.srt")
 
 if __name__ == "__main__":
     main()
