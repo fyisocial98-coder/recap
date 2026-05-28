@@ -14,16 +14,25 @@ def main():
     video_path = "input/video.mp4"
     audio_path = "input/audio.mp3"
     
-    # --- ဗီဒီယိုဖိုင် တကယ် ရှိမရှိ နှင့် ပျက်မပျက် ကြိုတင်စစ်ဆေးခြင်း ---
     if not os.path.exists(video_path):
-        raise FileNotFoundError(f"❌ [Error] '{video_path}' ဖိုင်ကို ရှာမတွေ့ပါ။ ရှေ့က 'Download video' အဆင့်မှာ ဗီဒီယိုလင့်ခ် ဒေါင်းလုဒ်ဆွဲတာ အောင်မြင်မှု ရှိမရှိ ပြန်စစ်ပေးပါ။")
+        raise FileNotFoundError(f"❌ [Error] '{video_path}' file not found.")
         
-    if os.path.getsize(video_path) == 0:
-        raise ValueError(f"❌ [Error] '{video_path}' ဖိုင်က 0 Bytes ဖြစ်နေပါတယ်။ ဗီဒီယို ဒေါင်းလုဒ်ဆွဲတာ မပြည့်စုံခဲ့ပါ။")
+    # ဗီဒီယိုထဲမှာ အသံလိုင်း ပါမပါ ကြိုစစ်ပြီး မပါရင် Error မတက်အောင် ကျော်မည့်စနစ်
+    probe_cmd = [
+        "ffprobe", "-v", "error", "-select_streams", "a", 
+        "-show_entries", "stream=codec_type", "-of", "csv=p=0", video_path
+    ]
+    has_audio = subprocess.run(probe_cmd, capture_output=True, text=True).stdout.strip()
     
+    if not has_audio:
+        print("⚠️ [Warning] This video has NO audio stream! Creating empty subtitle file.")
+        with open("output/chinese.srt", "w", encoding="utf-8") as f:
+            f.write("")
+        return
+
     print("🎵 Extracting audio using FFmpeg...")
     subprocess.run([
-        "ffmpeg", "-i", video_path, "-q:a", "0", "-map", "0:a?", audio_path, "-y"
+        "ffmpeg", "-i", video_path, "-q:a", "0", "-map", "0:a", audio_path, "-y"
     ], check=True)
     
     print("🎙️ Starting Whisper Transcription...")
