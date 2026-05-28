@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'ကိုယ်တိုင်ဒေါင်းထားသည့် ဗီဒီယို၏ Direct Link ကို ထည့်ပါ'
+        description: 'Google Drive မှ ပုံမှန် Share လင့်ခ်ကို ဒီအတိုင်း ထည့်ပေးပါ'
         required: true
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
       - name: Install system deps & Local Pyidaungsu Font
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fontconfig curl
+          sudo apt-get install -y ffmpeg fontconfig
           sudo mkdir -p /usr/share/fonts/truetype/pyidaungsu
           sudo cp Pyidaungsu.ttf /usr/share/fonts/truetype/pyidaungsu/
           sudo fc-cache -fv
@@ -44,13 +44,15 @@ jobs:
       - name: Download Video from Link
         run: |
           mkdir -p input output
-          # လူကိုယ်တိုင်တင်ထားသော Cloud Link မှ ဗီဒီယိုကို တိုက်ရိုက်ဆွဲယူခြင်း
-          curl -L -o input/video.mp4 "${{ inputs.video_url }}"
+          # yt-dlp ကိုသုံးပြီး Google Drive လင့်ခ်မှ ဗီဒီယိုအစစ်ကို အလိုအလျောက် ဆွဲယူခြင်း
+          yt-dlp --no-check-certificate \
+            -o "input/video.mp4" \
+            "${{ inputs.video_url }}"
           
           if [ -s "input/video.mp4" ]; then
-            echo "✅ Video downloaded successfully from user link."
+            echo "✅ Video downloaded successfully from Google Drive."
           else
-            echo "❌ Error: ဗီဒီယိုကို ဒေါင်းလုဒ်ဆွဲ၍မရပါ။ လင့်ခ်မှားနေခြင်း သို့မဟုတ် လင့်ခ်သက်တမ်းကုန်နေခြင်း ဖြစ်နိုင်ပါသည်။"
+            echo "❌ Error: ဗီဒီယိုကို ဒေါင်းလုဒ်ဆွဲ၍မရပါ။ လင့်ခ်မှားနေခြင်း သို့မဟုတ် Share ပိတ်ထားခြင်း ဖြစ်နိုင်ပါသည်။"
             exit 1
           fi
 
