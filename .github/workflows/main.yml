@@ -1,10 +1,10 @@
-name: Free Chinese Video to Burmese TikTok
+name: High Quality Chinese Video to Burmese TikTok
 
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'Chinese video URL'
+        description: 'Chinese video URL (TikTok/Douyin)'
         required: true
 
 jobs:
@@ -26,12 +26,14 @@ jobs:
           path: |
             ~/.cache/huggingface
             ~/.cache/faster_whisper
-          key: model-cache-v1
+          key: model-cache-v3
 
-      - name: Install system deps & Myanmar font
+      - name: Install system deps & Local Pyidaungsu Font
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-noto-cjk fonts-noto-myanmar
+          sudo apt-get install -y ffmpeg fontconfig
+          sudo mkdir -p /usr/share/fonts/truetype/pyidaungsu
+          sudo cp Pyidaungsu.ttf /usr/share/fonts/truetype/pyidaungsu/
           sudo fc-cache -fv
 
       - name: Install Python deps
@@ -42,22 +44,28 @@ jobs:
       - name: Download video
         run: |
           mkdir -p input output
+          COOKIE_ARG=""
+          if [ -f "cookies.txt" ]; then
+            COOKIE_ARG="--cookies cookies.txt"
+            echo "🍪 cookies.txt found! Using authenticated download."
+          fi
           yt-dlp --no-check-certificate \
             --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            $COOKIE_ARG \
             -f "best[ext=mp4]" \
             -o "input/video.mp4" \
             "${{ inputs.video_url }}"
 
-      - name: Transcribe (Chinese)
+      - name: High-Quality Transcribe (Chinese)
         run: python transcribe.py
 
-      - name: Translate (Chinese → Burmese)
+      - name: High-Quality Translate (Chinese → Burmese)
         run: python translate.py
 
-      - name: Burn subtitles with Noto Sans Myanmar
+      - name: Burn subtitles
         run: python burn.py
 
-      - name: Resize to TikTok (9:16)
+      - name: Fast Resize to TikTok Layout
         run: python resize.py
 
       - name: Upload final video
