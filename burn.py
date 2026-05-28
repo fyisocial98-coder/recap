@@ -1,9 +1,18 @@
-import subprocess
 import os
+import shutil
+import subprocess
 
 def main():
-    if not os.path.exists("output/burmese.srt"):
-        print("⚠️ No burmese.srt, skipping burn")
+    srt_path = "output/burmese.srt"
+    input_video = "input/video.mp4"
+    output_video = "output/with_subs.mp4"
+    
+    # စာတန်းဖိုင် မရှိရင် သော်လည်းကောင်း၊ ဖိုင်ထဲတွင် စာသားမရှိဘဲ အလွတ်ဖြစ်နေရင်သော်လည်းကောင်း စာတန်းထိုးခြင်းကို ကျော်ပါမည်
+    if not os.path.exists(srt_path) or os.path.getsize(srt_path) == 0:
+        print("⚠️ [Warning] burmese.srt အလွတ်ဖြစ်နေသောကြောင့် စာတန်းထိုးခြင်းကို ကျော်ပြီး မူရင်းဗီဒီယိုကို တိုက်ရိုက်သုံးပါမည်။")
+        os.makedirs("output", exist_ok=True)
+        if os.path.exists(input_video):
+            shutil.copy(input_video, output_video)
         return
         
     style = (
@@ -18,11 +27,11 @@ def main():
     )
     
     cmd = [
-        "ffmpeg", "-i", "input/video.mp4",
-        "-vf", f"subtitles=output/burmese.srt:force_style='{style}'",
+        "ffmpeg", "-i", input_video,
+        "-vf", f"subtitles={srt_path}:force_style='{style}'",
         "-c:v", "libx264", "-crf", "23",
         "-c:a", "copy",
-        "output/with_subs.mp4", "-y"
+        output_video, "-y"
     ]
     
     print("🎬 Burning High-Quality Burmese subtitles...")
