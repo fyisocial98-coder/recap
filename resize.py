@@ -7,15 +7,14 @@ def main():
     output_video = "output/tiktok_final.mp4"
     
     if not os.path.exists(input_video):
-        print("⚠️ with_subs.mp4 not found, using original video")
         shutil.copy("input/video.mp4", output_video)
         return
 
-    # ဗီဒီယိုကို ဘေးအမည်းကွက်များမချန်ဘဲ Blurred Background ပြုလုပ်ပြီး အပေါ်တွင် Title တပ်ဆင်ခြင်း
     title_text = "Chinese Short Drama 🎬" 
     
+    # Downscale Blur နည်းပညာဖြင့် ဗီဒီယို Processing ကို အချိန်ကုန် သက်သာစေသည်
     filter_complex = (
-        "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:10[bg];"
+        "[0:v]scale=180:320,boxblur=5,scale=1080:1920[bg];"
         "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease[fg];"
         "[bg][fg]overlay=(W-w)/2:(H-h)/2[combined];"
         f"[combined]drawtext=text='{title_text}':fontcolor=white:fontfile=/usr/share/fonts/truetype/pyidaungsu/Pyidaungsu.ttf:"
@@ -30,9 +29,9 @@ def main():
         output_video, "-y"
     ]
     
-    print("📱 Transforming video to Premium TikTok Layout (Blur BG + Top Title)...")
+    print("📱 Creating TikTok Layout (Fast Blur BG)...")
     subprocess.run(cmd, check=True)
-    print("✅ TikTok Premium Video Ready ->", output_video)
+    print("✅ TikTok Final Video Ready ->", output_video)
 
 if __name__ == "__main__":
     main()
