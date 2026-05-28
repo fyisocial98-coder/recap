@@ -14,11 +14,19 @@ def main():
     video_path = "input/video.mp4"
     audio_path = "input/audio.mp3"
     
+    # --- ဗီဒီယိုဖိုင် တကယ် ရှိမရှိ နှင့် ပျက်မပျက် ကြိုတင်စစ်ဆေးခြင်း ---
+    if not os.path.exists(video_path):
+        raise FileNotFoundError(f"❌ [Error] '{video_path}' ဖိုင်ကို ရှာမတွေ့ပါ။ ရှေ့က 'Download video' အဆင့်မှာ ဗီဒီယိုလင့်ခ် ဒေါင်းလုဒ်ဆွဲတာ အောင်မြင်မှု ရှိမရှိ ပြန်စစ်ပေးပါ။")
+        
+    if os.path.getsize(video_path) == 0:
+        raise ValueError(f"❌ [Error] '{video_path}' ဖိုင်က 0 Bytes ဖြစ်နေပါတယ်။ ဗီဒီယို ဒေါင်းလုဒ်ဆွဲတာ မပြည့်စုံခဲ့ပါ။")
+    
+    print("🎵 Extracting audio using FFmpeg...")
     subprocess.run([
         "ffmpeg", "-i", video_path, "-q:a", "0", "-map", "0:a?", audio_path, "-y"
     ], check=True)
     
-    # beam_size=5 ကြောင့် တရုတ်စကားပြော မြန်သော်လည်း အမှားနည်းဆုံး ဖမ်းပေးမည်ဖြစ်သည်
+    print("🎙️ Starting Whisper Transcription...")
     model = WhisperModel("base", device="cpu", compute_type="int8")
     segments, _ = model.transcribe(audio_path, language="zh", beam_size=5)
     
