@@ -18,7 +18,7 @@ def main():
         "ffmpeg", "-i", video_path, "-q:a", "0", "-map", "0:a?", audio_path, "-y"
     ], check=True)
     
-    # beam_size=5 သို့ ပြန်တိုးမြှင့်လိုက်သဖြင့် တရုတ်စကားလုံးများကို အမှန်ကန်ဆုံး နားထောင်ပေးမည် ဖြစ်သည်
+    # beam_size=5 ကြောင့် တရုတ်စကားပြော မြန်သော်လည်း အမှားနည်းဆုံး ဖမ်းပေးမည်ဖြစ်သည်
     model = WhisperModel("base", device="cpu", compute_type="int8")
     segments, _ = model.transcribe(audio_path, language="zh", beam_size=5)
     
