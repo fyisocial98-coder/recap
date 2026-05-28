@@ -1,10 +1,10 @@
-name: High Quality Chinese Video to Burmese TikTok
+name: High Quality Video to Burmese TikTok (Via Direct Link)
 
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'Chinese video URL (TikTok/Douyin)'
+        description: 'ကိုယ်တိုင်ဒေါင်းထားသည့် ဗီဒီယို၏ Direct Link ကို ထည့်ပါ'
         required: true
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
       - name: Install system deps & Local Pyidaungsu Font
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fontconfig
+          sudo apt-get install -y ffmpeg fontconfig curl
           sudo mkdir -p /usr/share/fonts/truetype/pyidaungsu
           sudo cp Pyidaungsu.ttf /usr/share/fonts/truetype/pyidaungsu/
           sudo fc-cache -fv
@@ -41,23 +41,19 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Download video
+      - name: Download Video from Link
         run: |
           mkdir -p input output
-          COOKIE_ARG=""
-          if [ -f "cookies.txt" ]; then
-            COOKIE_ARG="--cookies cookies.txt"
-            echo "🍪 cookies.txt found! Using authenticated download."
+          # လူကိုယ်တိုင်တင်ထားသော Cloud Link မှ ဗီဒီယိုကို တိုက်ရိုက်ဆွဲယူခြင်း
+          curl -L -o input/video.mp4 "${{ inputs.video_url }}"
+          
+          if [ -s "input/video.mp4" ]; then
+            echo "✅ Video downloaded successfully from user link."
+          else
+            echo "❌ Error: ဗီဒီယိုကို ဒေါင်းလုဒ်ဆွဲ၍မရပါ။ လင့်ခ်မှားနေခြင်း သို့မဟုတ် လင့်ခ်သက်တမ်းကုန်နေခြင်း ဖြစ်နိုင်ပါသည်။"
+            exit 1
           fi
-          # ပိုမိုကောင်းမွန်သော Chrome Browser အသွင်ယူပြီး ဒေါင်းလုဒ်ဆွဲမည့်စနစ်
-          yt-dlp --no-check-certificate \
-            --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
-            $COOKIE_ARG \
-            --extractor-args "tiktok:api_hostname=api16-normal-c-useast1a.tiktokv.com" \
-            -o "input/video.mp4" \
-            "${{ inputs.video_url }}"
 
-     
       - name: High-Quality Transcribe (Chinese)
         run: python transcribe.py
 
